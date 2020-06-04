@@ -28,6 +28,12 @@ const CreatePoint = () => {
   const [ufs, setUfs] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
 
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    whatsapp: "",
+  });
+
   const [initialPosition, setInitialPosition] = useState<[number, number]>([
     0,
     0,
@@ -35,15 +41,19 @@ const CreatePoint = () => {
 
   const [selectedUf, setSelecteUf] = useState("0");
   const [selectedCity, setSelecteCity] = useState("0");
-  const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0,0,]);
-  
-  useEffect(()=>{
-    navigator.geolocation.getCurrentPosition(position =>{
-      const {latitude, longitude} = position.coords;
+  const [selectedPosition, setSelectedPosition] = useState<[number, number]>([
+    0,
+    0,
+  ]);
+  const [selectedItens, setSelectedItens] = useState<number[]>([]);
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
 
       setInitialPosition([latitude, longitude]);
     });
-  },[])
+  }, []);
 
   useEffect(() => {
     api.get("items").then((res) => {
@@ -95,10 +105,19 @@ const CreatePoint = () => {
   }
 
   function handleMapClick(event: LeafletMouseEvent) {
-    setSelectedPosition([
-      event.latlng.lat,
-      event.latlng.lng
-    ]);
+    setSelectedPosition([event.latlng.lat, event.latlng.lng]);
+  }
+
+  function handleinputChange(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.target;
+
+    setFormData({ ...formData, [name]: value });
+  }
+
+  function handleSelectItem(id:number) {
+    setSelectedItens([...selectedItens, id])
+
+
   }
 
   return (
@@ -124,17 +143,33 @@ const CreatePoint = () => {
 
           <div className="field">
             <label htmlFor="name">Nome da entidade</label>
-            <input type="text" name="name" id="name" />
+            <input
+              type="text"
+              name="name"
+              id="name"
+              onChange={handleinputChange}
+            />
           </div>
 
           <div className="field-group">
             <div className="field">
               <label htmlFor="email">E-mail</label>
-              <input type="text" name="email" id="email " />
+
+              <input
+                type="text"
+                name="email"
+                id="email "
+                onChange={handleinputChange}
+              />
             </div>
             <div className="field">
               <label htmlFor="name">Whatsapp</label>
-              <input type="text" name="whatsapp" id="whatsapp" />
+              <input
+                type="text"
+                name="whatsapp"
+                id="whatsapp"
+                onChange={handleinputChange}
+              />
             </div>
           </div>
         </fieldset>
@@ -144,11 +179,7 @@ const CreatePoint = () => {
             <h2>Endereço</h2>
             <span>Selecione o endereço no mapa</span>
           </legend>
-          <Map
-            center={initialPosition}
-            zoom={15}
-            onClick={handleMapClick}
-          >
+          <Map center={initialPosition} zoom={15} onClick={handleMapClick}>
             <TileLayer
               attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -201,7 +232,12 @@ const CreatePoint = () => {
 
           <ul className="items-grid">
             {items.map((item) => (
-              <li key={item.id}>
+              <li 
+              className={selectedItens.includes(item.id) ? 'selected' : ''}
+              key={item.id} 
+              onClick={ () => handleSelectItem(item.id)}
+              
+              >
                 <img src={item.image_url} alt={item.title} />
                 <span>{item.title}</span>
               </li>
