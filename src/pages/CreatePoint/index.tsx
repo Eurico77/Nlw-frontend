@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from "react";
 import { Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import {Map,TileLayer,Marker} from 'react-leaflet'
+import {Map,TileLayer,Marker} from 'react-leaflet';
+import axios from  'axios';
 
 import api from '../../services/api';
 import "./styles.css";
@@ -16,7 +17,14 @@ const CreatePoint = () => {
     image_url: string;
   }
 
+  interface IBGREresponse {
+    sigla:string;
+  }
+
+  
   const [items,setItems] = useState<Item[]>([]);
+  const [ufs, setUfs] = useState<string[]>([]);
+  const [selectedUf,setSelectedU]= useState('0');
 
   useEffect(() => {
     api.get('items').then(res =>{
@@ -26,7 +34,18 @@ const CreatePoint = () => {
 
     });
 
-  },[]);  
+  },[]);
+  
+  useEffect(() => {
+    axios.get<IBGREresponse[]>('https://servicodados.ibge.gov.br/api/v1/localidades/distritos')
+    .then(res =>{
+      const ufInitials = res.data.map(uf => uf.sigla)
+      console.log(res)
+
+      setUfs(ufInitials);
+
+    })
+  },[]);
 
   
   return (
@@ -96,8 +115,13 @@ const CreatePoint = () => {
             <div className="field">
               <label htmlFor="uf">UF</label>
               <select name="uf" id="uf">
-                <option value="0">Selecione uma UF</option>
+              <option value="0">Selecione uma UF</option>
+               
+                {ufs.map(uf =>(
+                   <option key={uf} value={uf}>{uf}</option>
+                ))}
               </select>
+
             </div>
             <div className="field">
               <label htmlFor="uf">CIdade</label>
